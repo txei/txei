@@ -11,11 +11,19 @@ an insecure elections system.  If a winning system is produced, why
 wouldn't the State of Texas adopt it?
 
 Still, we should consider the issues and requirements for such a system,
-and even some ideas for how to build a secure elections system.
+and even some ideas for how to build a secure elections system.  That's
+what I'll do in this document:
 
-First let's discuss the weaknesses of elections systems and which parts
-we can bring technology (including pen-and-paper) to bear to help
-prevent cheating.
+ - describe what a voter's experience should be with secure elections
+   systems
+ - discuss weaknesses of elections systems,
+ - discuss what can and can't be done with technology,
+ - discuss requirements for secure elections systems,
+ - explain what blockchains are and how not to misuse them,
+ - describe how to mix paper and digital cryptographic technology,
+ - describe such a secure elections system,
+ - present a threat model for secure elections systems,
+ - analyze the proposed secure elections system.
 
 It is essential to understand that technology cannot fully secure
 elections.  At the end of the day we must have judicial and political
@@ -44,6 +52,65 @@ else.
 >
 > Asterisks are used for bold emphasis, while underscores are used for
 > italics emphasis.
+
+# Ideal Voter Experience
+
+The process of voting in a secure elections system should be similar to
+today's, with only additions that help the voter and the public confirm
+the validity of an election's results.
+
+Specifically:
+
+ - voters should sign-in on a tamper-evident paper voter roll as well as
+   on a tamper-evident digital cryptographic roll;
+
+ - voters should take a picture of the page they signed on the voter
+   roll;
+
+ - voters should get a receipt from the digital voter roll that captures
+   the "head" of a voter roll blockchain that can be verified is
+   included in the final blockchain head;
+
+ - voters should use a ballot marking machine and review the markings on
+   their ballot match their selections
+
+   (this step eliminates Florida, 2000, "hanging chad" style problems)
+
+ - voters should feed their ballots to a ballot scanner that:
+
+    - will drop the ballot in a physically-secured, tamper-evident
+      ballot box
+
+    - will print a receipt that *does not* violate the secrecy of the
+      ballot but which _does_ commit to running elections results
+      without revealing them and in a way that can be cryptographically
+      verified with any number of apps
+
+ - voters should be given the link to a document that describes how to
+   validate the voter roll receipt and the ballot scanner receipt, both
+   while still in the precinct, as well at home after the precinct's
+   closing
+
+ - voters should be able to visit a poll watcher to get help validating
+   their receipts
+
+ - when the election closes, voters should be able to:
+
+    - validate the integrity of their precinct's voter roll,
+    - search through all the voter rolls in their precinct/county/state
+      for instances of others voting in their name
+    - validate the integrity of the ballot scanning
+    - rely on assurances by poll watchers that they have observed manual
+      counts of randomly-selected ballot boxes match the cryptographic
+      commitments made by the ballot scanners
+
+In particular, voters should be able to quickly detect ballot box
+stuffing, ballot scanner compromises, voter roll padding, and incorrect
+aggregation of precinct results.
+
+Denial of service problems ("machines are all down") can be resolved
+with something akin to provisional voting in other precincts or even
+counties.
 
 # Weaknesses of Elections Systems
 
@@ -86,7 +153,7 @@ document will be.
 
 My main goal here is to:
 
- - Make any cheating so obvious, and so *automatically obvious* that
+ - make any cheating so obvious, and so *automatically obvious* that
    it is politically infeasible to allow it.
 
 Implied by this goal are the following corollary goals
