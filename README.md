@@ -879,13 +879,161 @@ precinct close time, etc.  Of particular interest will be recovery from
 reboots, power failures, and any attempts at denial of service attacks
 on the machines (e.g., attempts to destroy them).]
 
-# Thread Models
+# Thread Model
 
-[TBD.  This section will describe the kinds of malicious actors and
-attacks that we wish to defend against.]
+We leave attacks on pre-election voter registration out of scope.
+
+Post-certification legal cases are also out of scope.
+
+Some attacks that we foresee cannot be defended only with technology, or
+only with tamper-resistant and/or tamper-evident paper and blockchain
+technology.
+
+We envision the following threads on secure elections systems:
+
+ - active attacks
+    - double voting (voting multiple distinct times)
+    - double voting (feeding multiple ballots to ballot scanners)
+    - impersonation of voters
+    - on voter sign-in roll to add or remove voters
+    - on voter sign-in roll to replace whole books and any blockchain logs
+    - on ballot scanners to add ballots (ballot box stuffing)
+    - on ballot scanners to alter vote totals
+    - on ballot boxes to add ballots (ballot box stuffing)
+    - on ballot boxes to alter vote totals
+    - on ballot boxes and ballot scanners to replace all ballots and any blockchain logs
+
+ - passive attacks
+    - cameras recording how voters vote
+    - compromised ballot marking machines or ballot scanners covertly logging running totals
+
+ - denial of service attacks
+    - denial of access to registered voters
+    - tampering with blank ballots to cause adjudication
+    - tampering with ballot marking machines to cause adjudication
+    - destruction of voter sign-in stations
+    - destruction of ballot scanners
+    - destruction of ballot boxes
+    - destruction of precincts
 
 # Analysis
 
-[TBD.  This section will analyze whether and to what extent the systems
+In this section we'll analyze whether and to what extent the systems
 proposed here satisfy the thread model described in the previous
-section.]
+section.
+
+## Active Attacks Other Than Denial-of-Service Attacks
+
+Voting at multiple distinct times in the same election and precinct
+is automatically detectable via a voter roll blockchain broadcast in
+real-time.
+
+Voting at multiple precincts is also automatically detectable via a
+voter roll blockchain broadcast in real-time.
+
+Voting multiple times by feeding multiple ballots to a ballot scanner is
+detectable by poll watchers and voters when they see a voter handed more
+than one ballot.  In order to detect that voters have been secretly
+handed multiple ballots (e.g., prior to the precinct's opening), poll
+watchers must check that the number of ballots on hand at precinct open
+time is matches the number of ballots ordered for the precinct.  Where
+voting is allowed, then the number of voters signed-in and ballots
+handed out must match, and must be recorded every day in order to
+reconcile with the number of ballots available at precinct open and
+close times.  The number of ballots left at the close of the election
+must match the number of ballots ordered minus the number of voters
+signed in.  The number of ballots cast must be not more than the number
+of voters signed-in.
+
+Voters who sign in must cast a ballot unless the ballot scanners reject
+them.  To avoid ballot scanners rejecting ballots, ballot scanners must
+accept every ballot (some might have to be adjudicated, but more about
+that below).  It must be punishable by law to sign-in then refuse to
+cast a ballot.
+
+Voter sign-in devices must take a snapshot of each voter's face.  This
+can make it possible to detect impersonation.  It remains possible for
+an impersonator to vote in someone else's name ahead of them, and then
+force the real person to vote provisionally (or not vote) -- these cases
+must be prosecuted, and the capture of a voter's face makes it possible
+to use face detection to identify anyone voting in someone else's name.
+
+### Active Attacks on Results
+
+Here we cover active attacks on:
+
+ - on voter sign-in roll to add or remove voters
+ - on voter sign-in roll to replace whole books and any blockchain logs
+ - on ballot scanners to add ballots (ballot box stuffing)
+ - on ballot scanners to alter vote totals
+ - on ballot boxes to add ballots (ballot box stuffing)
+ - on ballot boxes to alter vote totals
+ - on ballot boxes and ballot scanners to replace all ballots and any blockchain logs
+
+All of these attacks are trivially detected by blockchains broadcast in
+real-time.  Recall that for ballot scanners the blockchains must be
+taken over every-N-votes standings in all races that are kept secret
+until the end of the election.  The integrity of the ballot scanner
+blockchains can be checked during the election and also after the
+election when the every-N-votes standings are made public.
+
+But note that while the use of real-time broadcast blockchains can make
+all such attacks detectable, nothing about the use of blockchains can
+_prevent_ these attacks.  It falls to the law, elections authorities,
+and the legal system to do something when these attacks are detected.
+
+Denial attacks on publishing the every-N-votes standings after the
+election closes can be defeated by manually counting all the ballots.
+For this it remains essential that ballot boxes be tamper-resistant and
+tamper-evident and numbered, which ballot box numbers being recorded,
+etc.  All the normal procedures for managing ballot boxes and manually
+counting ballots must be applied, and this includes allowing poll
+watchers to observe the process.
+
+## Passive Attacks
+
+Tamper-resistant/evident paper and blockchain logging cannot prevent
+passive attacks.
+
+Protecting against cameras surreptitiously recording how voters vote is
+something that poll watchers and election judges will have to protect
+against by using hidden camera scanning tools, both before the precinct
+opens, and perhaps also occasionally during voting.
+
+Covert channels in ballot marking machines or in ballot scanners are
+always possible.  These could be done via ethernet, wifi, bluetooth,
+infrared, other electromagnetic wireless systems, ultrasound,
+infrasound, microdots on receipts, etc.  Such covert channels can be
+quite difficult to detect.
+
+## Denial-of-Service (DoS) Attacks
+
+Tamper-resistant/evident paper and blockchain logging cannot prevent
+DoS attacks.
+
+However, the law can allow voters to vote in a way that is akin to
+provisional voting in other precincts, possibly even in other counties.
+
+In order to make it possible to count provisional votes reliably, it
+would be necessary to violate the secrecy of the ballot for provisional
+votes, and to always count those provisional votes from voters who have
+not signed-in more than once anywhere in the state.  Such ballots would
+have to be counted by hand.
+
+Post-sign-in DoS attacks will generally cause the voter to appear to
+have signed-in twice if they then go vote provisionally elsewhere.
+Surveillance cameras (that cannot record voter marking devices or
+ballots fed to ballot scanners) should be usable to determine if a voter
+is lying about being denied the ability to vote.  Voters who aver being
+denied access post-sign-in should have to sign an affidavit in order to
+vote provisionally.
+
+Ultimately, for the most destructive DoS attacks (such as destroying
+entire precincts, or refusing to run an election at all), the law must
+provide for punishment and, in the most extreme cases, do-overs of the
+election, and the legal system must uphold the law.
+
+In general election do-overs never happen except for the most-local
+races.  This has to continue to be the case except in extreme cases of
+DoS attacks that can only be remediated via do-overs -- the threat of
+prosecution and a do-over should be sufficient to prevent such attacks.
