@@ -2,13 +2,15 @@
 
 Texas needs a secure elections system.
 
-Perhaps the simplest way for Texas to get a secure elections system to
-get it is to commission it from the Texas' University of Texas public
-higher education institutions.  Who would object to giving UT schools
-small grants to develop secure elections systems in competition with
-each other?  Surely no academic would risk their reputation in building
-an insecure elections system.  If a winning system is produced, why
-wouldn't the State of Texas adopt it?
+Perhaps the politically simplest way for Texas to get a secure elections
+system to get it is to commission it from the Texas' University of Texas
+public higher education institutions.
+
+> Who would object to giving UT schools small grants to develop secure
+> elections systems in competition with each other?  Surely no academic
+> would risk their reputation in building an insecure elections system.
+> If a winning system is produced, why wouldn't the State of Texas adopt
+> it?
 
 Still, we should consider the issues and requirements for such a system,
 and even some ideas for how to build a secure elections system.  That's
@@ -61,22 +63,29 @@ the validity of an election's results.
 
 Specifically:
 
- - voters should sign-in on a tamper-evident paper voter roll as well as
+ - voters must sign-in on a tamper-evident paper voter roll as well as
    on a tamper-evident digital cryptographic roll;
 
- - voters should take a picture of the page they signed on the voter
+   Signing-in must be done first on a machine which should print an
+   adhesive label that should be affixed to the paper voter roll and
+   which the voter should sign.
+
+   As a deterrent to double voting a picture of the voter's face should
+   be taken by the sign-in machine.
+
+ - voters _should_ take a picture of the page they signed on the voter
    roll;
 
- - voters should get a receipt from the digital voter roll that captures
+ - voters must get a receipt from the digital voter roll that captures
    the "head" of a voter roll blockchain that can be verified is
    included in the final blockchain head;
 
- - voters should use a ballot marking machine and review the markings on
-   their ballot match their selections
+ - voters must use a ballot marking machine and review the markings on
+   their ballot match their selections;
 
    (this step eliminates Florida, 2000, "hanging chad" style problems)
 
- - voters should feed their ballots to a ballot scanner that:
+ - voters must feed their ballots to a ballot scanner that:
 
     - will drop the ballot in a physically-secured, tamper-evident
       ballot box
@@ -85,6 +94,8 @@ Specifically:
       ballot but which _does_ commit to running elections results
       without revealing them and in a way that can be cryptographically
       verified with any number of apps
+
+      Voters can retain or destroy this receipt.
 
  - voters should be given the link to a document that describes how to
    validate the voter roll receipt and the ballot scanner receipt, both
@@ -808,13 +819,24 @@ TPMs provide a number of "shielded" cryptographic functions:
 
  - head-of-blockchain registers,
 
- - shielded cryptographic key objects (secret/private keys),
+ - shielded (non-extractable) cryptographic key objects (secret/private
+   keys),
+
+ - restricted key objects (which can only be used in TPM functions that
+   sign or decrypt specific kinds of payloads),
+
+   > These are useful functions, such as the "quote" function, which can
+   > sign a variety of TPM state, including some or all PCRs, TPM reset
+   > counter, etc.  The TPM reset counter, for example, can be used to
+   > detect rebooting of the host.  The PCRs can be used to detect
+   > loading of unapproved software.  The PCRs can also be used to bind
+   > the current heads of multiple blockchains.
 
  - a rich authorization policy facility for determining whether software
    running on the machin with the TPM can use a given key object,
 
- - use of key objects by software on the machine with the TPM (e.g., to
-   make digital signatures).
+ - use of key objects by software on the machine that has the TPM (e.g.,
+   to make digital signatures), but subject to policy.
 
 "Shielded" means that the cryptographic objects (such as secret/private
 keys) are held in the TPM chip in a way that either they cannot ever be
@@ -852,13 +874,15 @@ blockchain.
 There is a great deal more to say about TPMs, but it's mostly all out of
 scope for this document at this time.
 
+[TBD: Add a lot of detail.]
+
 # Design Recap
 
 [To be expanded on later.]
 
  - Signed blockchains for voter sign-in rolls.
- - Committed and signed blockchains of running vote totals for ballot
-   scanners.
+ - Signed blockchains of committed -but not public until the close of
+   the election- running vote totals for ballot scanners.
  - All on machines that use TPMs to secure digital signature keys and
    validate that only approved software is running on the machine.
  - The integrity of the blockchains can be checked in real-time as well
@@ -901,7 +925,14 @@ We envision the following threads on secure elections systems:
     - on ballot scanners to alter vote totals
     - on ballot boxes to add ballots (ballot box stuffing)
     - on ballot boxes to alter vote totals
-    - on ballot boxes and ballot scanners to replace all ballots and any blockchain logs
+    - on ballot boxes and ballot scanners to replace all ballots and any
+      blockchain logs
+
+    - on ballot scanners so that they covertly log running totals live
+      to bad actors
+
+    - on ballot scanners so that they covertly arrange to reveal how
+      voters voted on their receipts
 
  - passive attacks
     - cameras recording how voters vote
@@ -989,6 +1020,38 @@ tamper-evident and numbered, which ballot box numbers being recorded,
 etc.  All the normal procedures for managing ballot boxes and manually
 counting ballots must be applied, and this includes allowing poll
 watchers to observe the process.
+
+### Active Attacks: Covert channels
+
+Here we cover active attacks on:
+
+ - on ballot scanners to report running totals live to bad actors
+
+Such covert channels can be very hard to detect.  But we can prevent
+them only by ensuring that ballot scanners have no communications
+devices -- no WiFi, no Bluetooth, no Ethernet, no speakers, no infrared
+LEDs, nothing that could be used to communicate live.
+
+Depriving ballot scanners of communications devices will require the use
+of a USB flash drive for loading ballots and software, and will require
+a serial for administration.
+
+[TBD: Expand on this.]
+
+### Active Attacks: Violating Ballot Secrecy
+
+Here we cover active attacks on:
+
+ - on ballot scanners to violate ballot secrecy
+
+The receipts printed by the ballot scanners should have only a "quote"
+made by a TPM's `TPM2_Quote()` function.  TPM quotes have a specific
+form, and the PCR(s) that is(are) used to track the committed running
+totals blockchain will be verifiable as part of the blockchain at the
+end.  If the blockchains fail to match at the end then voters who fear
+retribution for how they voted can destroy their receipts.
+
+[Can we do better?]
 
 ## Passive Attacks
 
