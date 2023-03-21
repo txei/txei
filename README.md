@@ -102,6 +102,9 @@ Specifically:
    while still in the precinct, as well at home after the precinct's
    closing
 
+ - voters should be able to use apps on their smartphones to validate
+   the ballot scanner receipt
+
  - voters should be able to visit a poll watcher to get help validating
    their receipts
 
@@ -1046,12 +1049,23 @@ Here we cover active attacks on:
 
 The receipts printed by the ballot scanners should have only a "quote"
 made by a TPM's `TPM2_Quote()` function.  TPM quotes have a specific
-form, and the PCR(s) that is(are) used to track the committed running
-totals blockchain will be verifiable as part of the blockchain at the
-end.  If the blockchains fail to match at the end then voters who fear
-retribution for how they voted can destroy their receipts.
+form.  Some of its fields are cryptographic values that are
+random-looking and, if the value were fake, those could be used to
+encode how the voter voted.  If however the digital signature in the
+quote can be verified (by an app on the voter's smartphone, say, or a
+poll watcher's) then none of the random-looking parts of the quote can
+be used for encoding how the voter voted: the signature itself would not
+be verifiable if it encoded actual data, and the TPM would not place
+actual data as the PCR values, so if the signature is valid and made
+with a non-extractable, restricted attestation key, then the whole
+quote cannot enode how the voter voted.
 
-[Can we do better?]
+So voters can detect compromised ballot scanner attempts to violate the
+secrecy of their ballot via the receipt.
+
+Nor do ballot scanners know the identity of the voter, so they cannot
+selectively use the receipt to leak how some voters voted without
+risking detection.
 
 ## Passive Attacks
 
@@ -1064,10 +1078,15 @@ against by using hidden camera scanning tools, both before the precinct
 opens, and perhaps also occasionally during voting.
 
 Covert channels in ballot marking machines or in ballot scanners are
-always possible.  These could be done via ethernet, wifi, bluetooth,
-infrared, other electromagnetic wireless systems, ultrasound,
+always possible.  These could be done via Ethernet, WiFi, Bluetooth,
+infrared LEDs, other electromagnetic wireless systems, ultrasound,
 infrasound, microdots on receipts, etc.  Such covert channels can be
-quite difficult to detect.
+quite difficult to detect.  The best thing to do about covert channels
+is to make sure that ballot scanners have no WiFi devices, no Ethernet,
+no Bluetooth, and no LEDs.  Ballot scanners must have some way to
+communicate, and that would have to be over USB -- possibly over
+Ethernet over USB, and it must be verifiable by voters and poll watchers
+that there are no USB devices plugged in.
 
 ## Denial-of-Service (DoS) Attacks
 
