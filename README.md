@@ -6,18 +6,12 @@ Perhaps the politically simplest way for Texas to get a secure elections
 system to get it is to commission it from the Texas' University of Texas
 public higher education institutions.
 
-> Who would object to giving UT schools small grants to develop secure
-> elections systems in competition with each other?  Surely no academic
-> would risk their reputation in building an insecure elections system.
-> If a winning system is produced, why wouldn't the State of Texas adopt
-> it?
-
 Still, we should consider the issues and requirements for such a system,
-and even some ideas for how to build a secure elections system.  That's
-what I'll do in this document:
+and even some specific ideas for how to build a secure elections system.
+That's what I'll do in this document:
 
- - describe what a voter's experience should be with secure elections
-   systems
+ - describe what a voter's ideal experience should be with secure
+   elections systems
  - discuss weaknesses of elections systems,
  - discuss what can and can't be done with technology,
  - discuss requirements for secure elections systems,
@@ -55,6 +49,28 @@ else.
 > Asterisks are used for bold emphasis, while underscores are used for
 > italics emphasis.
 
+## Ideas, from most meta to least:
+
+1. Let UT schools compete in designing a secure elections system.
+
+   Who would object to giving UT schools small grants to develop secure
+   elections systems in competition with each other?  Surely no academic
+   would risk their reputation in building an insecure elections system
+   -- they might refuse to do it, but they won't build an insecure
+   system.  If professors won't do it, grad students might.  If a
+   winning system is produced after thorough public review, why wouldn't
+   the State of Texas adopt it?
+
+2. Make it all open source.
+
+3. Use blockchains to secure voter sign-in rolls and vote counts without
+   compromising ballot secrecy (yes, there is a way to do that!).
+
+4. Use Trusted Platform Modules (TPMs) to greatly reduce the amount of
+   code to trust.
+
+5. See the rest of this document.
+
 # Ideal Voter Experience
 
 The process of voting in a secure elections system should be similar to
@@ -80,6 +96,22 @@ Specifically:
    the "head" of a voter roll blockchain that can be verified is
    included in the final blockchain head;
 
+   For 49 out of every 50 voters this receipt should be a plain English
+   text document indicating which of the current block of 50 voters they
+   are, e.g., "You are the 37th of the current block of 50 voters."
+
+   For 1 out of every 50 voters this receipt should be a QR code
+   containing a signed blockchain head committing to the current
+   standings in all races at that ballot scanner, and the voter should
+   be able to confirm this using third party apps.
+
+   This receipt must be public following the voter's confirmation of the
+   receipt being properly formed and signed by a TPM such that the
+   receipt cannot encode how the voter (nor the 49 preceding voters)
+   voted.  A copy of this receipt should be recorded by the precinct
+   before the voter exits, and poll watchers must be able to record and
+   broadcast this receipt.
+
  - voters must use a ballot marking machine and review the markings on
    their ballot match their selections;
 
@@ -103,7 +135,9 @@ Specifically:
    closing
 
  - voters should be able to use apps on their smartphones to validate
-   the ballot scanner receipt
+   the ballot scanner receipt -- the system should be open source, so
+   anyone should be able to write their own validation app including
+   knowledgeable voters themselves
 
  - voters should be able to visit a poll watcher to get help validating
    their receipts
@@ -204,10 +238,46 @@ attempt to defeat.
       costs of running elections, and that is unlikely to change, so we
       might as well make sure that that technology is secure.
 
- - Ballot marking and ballot counting have to be separate machines.
+ - Paper ballots must be numbered as specified by the Texas Constitution
+   and its statutes.  This means among other things:
+
+    - that ballots must be printed with sequential numbering,
+    - that ballots must be delivered in sealed batches each of
+      sequentially numbered ballots,
+    - that all the ballot batch number ranges must be recorded at each
+      step in the distribution chain,
+    - that each ballot batch must be unsealed at its final destination
+      precinct at the time that they are needed and that an election
+      judge and poll watchers must confirm that they are sequentially
+      numbered within the documented range,
+    - that each batch must be randomized prior to handing out to voters,
+    - that ballots must be placed face down on the voter sign-in table
+      so as to avoid anyone other than the voter knowing their ballot
+      number.
+
+ - Ballot marking and ballot scanning machines have to be separate.
    This is necessary so that voters can see that their paper ballot is
    accurate.  Ballot marking machines are useful in avoiding Florida
    2000 "hanging chad" style failures.
+
+ - Ballot marking and ballot scanning machines must not be connected to
+   any network with any technology.  The only way that a ballot scanner
+   should have to communicate once the election has started and before
+   it's finished is via printing of receipts.
+
+   In particular ballot marking and ballot scanning machines must not
+   have:
+
+    - any wireless hardware (WiFi, Bluetooth, or anything else)
+    - any wired networking hardware except ports that are immediately
+      visible to voters who can confirm that they have no cables plugged
+      in
+    - any USB or other ports except ones which are immediately visible
+      to voters who can confirm that they have no devices plugged in
+    - any LEDs capable of emitting non-visible light
+    - any speakers
+    - any cables of any kind other than one AC power cable each
+
 
  - Voter sign-in rolls.
 
@@ -223,7 +293,8 @@ attempt to defeat.
       vote secrecy.
 
     - Voters must not get to take home any "receipt" that shows how they
-      voted.
+      voted.  Conversely, voters can take home any receipt that does not
+      show how they voted but which commits the scanners to not lying.
 
  - Every effort has to be made to keep any _software_ honest.  Software
    will generally have bugs, and the larger the software, the more bugs
@@ -886,6 +957,9 @@ scope for this document at this time.
  - Signed blockchains for voter sign-in rolls.
  - Signed blockchains of committed -but not public until the close of
    the election- running vote totals for ballot scanners.
+ - All ballot marking and ballot scanning machines must be utterly
+   unconnected to any networks during the election, and this must be
+   easy enough for voters and watchers to confirm.
  - All on machines that use TPMs to secure digital signature keys and
    validate that only approved software is running on the machine.
  - The integrity of the blockchains can be checked in real-time as well
@@ -905,6 +979,20 @@ commissioned, decommissioned, have ballots loaded, have counters read a
 precinct close time, etc.  Of particular interest will be recovery from
 reboots, power failures, and any attempts at denial of service attacks
 on the machines (e.g., attempts to destroy them).]
+
+ - It should be possible to "program" ballot marking machines just by
+   scanning template ballots for all applicable precincts using the
+   machines.
+
+ - It should be possible to "program" ballot scanning machines just by
+   scanning template ballots for all applicable precincts using the
+   machines _before_ the election starts.  Once the election starts, and
+   until it ends, it must not be possible to reprogram ballot scanning
+   machines.
+
+ - Ballot scanners should have enough local, encrypted storage to store
+   ballot images and the plaintext of the running every-50-votes
+   standings, but this should not be accessible to administrators.
 
 # Thread Model
 
@@ -1036,10 +1124,10 @@ devices -- no WiFi, no Bluetooth, no Ethernet, no speakers, no infrared
 LEDs, nothing that could be used to communicate live.
 
 Depriving ballot scanners of communications devices will require the use
-of a USB flash drive for loading ballots and software, and will require
-a serial for administration.
+of a USB flash drive for loading ballots and software, and may require
+a serial port for administration.
 
-[TBD: Expand on this.]
+Ballot scanners must be able to print a receipt however.
 
 ### Active Attacks: Violating Ballot Secrecy
 
