@@ -950,6 +950,67 @@ scope for this document at this time.
 
 [TBD: Add a lot of detail.]
 
+# The Role of Ballot Scanner Software/Firmware
+
+The software/firmware run by the ballot scanner machines has a very
+limited role, and should rarely have to be updated.
+
+Specifically, the ballot scanner machines' software must:
+
+ - boot, using Trusted and Secure boot facilities leveraging the TPM to
+   ensure only blessed firmware and software is loaded
+
+ - have limited admin functions:
+
+    - show platform and endorsement certificates
+
+    - be programmable as to precinct number(s) and ballot forms -- this
+      latter may not really be needed either, as the ballots as printed
+      by the ballot marking machines should have all the necessary
+      information to count its votes and should be all human-readable
+      text that the scanner must scan with OCR
+
+    - be programmable as to election start and end datetimes
+
+ - keep track of election start and end times, even across reboots or
+   crashes
+
+ - print an every-50-votes receipt as described elsewhere, consisting of
+   a QR code encoding of a `TPM2_Quote()` containing all the relevant
+   PCRs (#0, #1, and whichever PCR is used for the committed every-50-
+   votes totals blockchain), signed with a `fixedTPM`, `fixedParent`,
+   `restricted`, `sign` attestation key that is certified by the
+   machine's vendor and bound to the TPM's endorsement key (`EK`) and
+   endorsement key certificate
+
+   (The receipt should also include the relevant certificates.)
+
+   > Yes, this will make this receipt rather large and unwieldy, but it
+   > is meant to be immediately scanned by the voter and poll watchers
+   > using apps that can verify the certificates and the signature on
+   > the `TPM2_Quote()`, which should then be sufficient to demonstrate
+   > that the receipt does not contain details of how the voter voted.
+
+ - be able to scan ballots printed in human-readable text, albeit in
+   some standard format and schema, and use OCR to scan it reliably
+
+ - keep track of election totals -- this needs to be on local storage,
+   and must be encrypted
+
+ - keep track of the private part of the committed blockchain in order
+   to make that available at the end of the election -- this needs to be
+   on local storage, and must be encrypted
+
+ - keep track of each ballot box's totals and ballot images -- this
+   needs to be on local storage, and must be encrypted
+
+ - keep track of all ballot images -- this needs to be on local storage,
+   and must be encrypted
+
+ - upon reboot or recovery from crash must stitch the new blockchain
+   onto the old one by extending a PCR with the head of the previous
+   blockchain
+
 # Design Recap
 
 [To be expanded on later.]
@@ -1124,8 +1185,11 @@ devices -- no WiFi, no Bluetooth, no Ethernet, no speakers, no infrared
 LEDs, nothing that could be used to communicate live.
 
 Depriving ballot scanners of communications devices will require the use
-of a USB flash drive for loading ballots and software, and may require
-a serial port for administration.
+of a USB flash drive for various administrative tasks, and may require
+a serial port for administration as well.  However, admin tasks should
+be few and rare, mostly just setting the start and end of the election.
+Firmware and software updates should also be rare and should be done
+well before an election starts, or preferably not at all.
 
 Ballot scanners must be able to print a receipt however.
 
@@ -1135,18 +1199,29 @@ Here we cover active attacks on:
 
  - on ballot scanners to violate ballot secrecy
 
-The receipts printed by the ballot scanners should have only a "quote"
-made by a TPM's `TPM2_Quote()` function.  TPM quotes have a specific
-form.  Some of its fields are cryptographic values that are
-random-looking and, if the value were fake, those could be used to
+First, only one in 50 voters should get a receipt with a large data
+payload that is not readable by humans.  The other 49 of every 50 voters
+should get a small receipt indicating that they are not that 50th voter
+-- those voters should be able to get a copy of the last full receipt
+from the poll workers (or poll watchers if need be).  Thus most voters
+can see with their own eyes that their receipt cannot include
+information on how they voted (unless it's via microdots or such covert
+channel techniques, but the voter can just destroy the receipt).
+
+The every-50-voters receipts printed by the ballot scanners should have
+only a "quote" made by a TPM's `TPM2_Quote()` function, and either the
+platform and endorsement certificates or URLs for them.  TPM quotes have
+a very specific form.  Some of its fields are cryptographic values that
+are random-looking and, if the value were fake, those could be used to
 encode how the voter voted.  If however the digital signature in the
 quote can be verified (by an app on the voter's smartphone, say, or a
-poll watcher's) then none of the random-looking parts of the quote can
-be used for encoding how the voter voted: the signature itself would not
-be verifiable if it encoded actual data, and the TPM would not place
-actual data as the PCR values, so if the signature is valid and made
-with a non-extractable, restricted attestation key, then the whole
-quote cannot enode how the voter voted.
+poll watcher's) as made by a TPM-resident, restricted, and certified
+key, then none of the random-looking parts of the quote can be used for
+encoding how the voter voted: the signature itself would not be
+verifiable if it encoded actual data, and the TPM would not place actual
+data as the PCR values, so if the signature is valid and made with a
+non-extractable, restricted attestation key, then the whole quote cannot
+enode how the voter voted.
 
 So voters can detect compromised ballot scanner attempts to violate the
 secrecy of their ballot via the receipt.
